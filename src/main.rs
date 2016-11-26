@@ -8,6 +8,8 @@ use std::io::{BufReader, BufWriter};
 use std::io::prelude::*;
 use ansi_term::Colour::*;
 
+mod template;
+
 // HTTP Spec: https://tools.ietf.org/html/rfc2616
 
 #[derive(Debug)]
@@ -96,6 +98,13 @@ fn main() {
     let listener = TcpListener::bind(
         SocketAddrV4::new("0.0.0.0".parse().unwrap(), port)
     ).unwrap();
+
+    for tok in template::tokenize("foo bar {{ stringthing }} more text {% if for thing \"string\" 123 %}".chars()) {
+    //for tok in template::tokenize("foo bar {{ stringthing }} more text".chars()) {
+        println!("{:?}", tok);
+    }
+    //println!("{:?}", template::tokenize("foo bar".chars()).collect());
+    panic!("quitting");
 
     println!("{}", Green.paint(format!("Listening on port {}", port)));
 

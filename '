@@ -1,0 +1,90 @@
+#![allow(dead_code)]
+
+use std::iter::Peekable;
+
+pub enum Keyword {
+    For,
+    If,
+    Then,
+    Else,
+    EndFor,
+    EndIf,
+}
+
+impl Keyword {
+    fn from_string(s: &str) -> Option<Keyword> {
+        match s {
+            "for" => Some(Keyword::For)
+            &x => None
+        }
+    }
+}
+
+pub enum Token {
+    Keyword(Keyword),
+    BeginDirective,
+    EndDirective,
+    BeginSubstitution,
+    EndSubstitution,
+    VariableName(String),
+    Operator(String),
+    StringLiteral(String),
+    NumberLiteral(i32),
+    BooleanLiteral(bool),
+    TextContent(String),
+    LeftBracket,
+    RightBracket,
+}
+
+enum TokenizerState {
+    Neutral,
+    InsideDirective,
+    InsideSubstitution,
+}
+
+pub struct TokenIter<I> where I: Iterator<Item=char> {
+    chars: Peekable<I>,
+    state: TokenizerState,
+}
+
+impl<I> Iterator for TokenIter<I> where I: Iterator<Item=char> {
+    type Item = Token;
+
+    fn next(&mut self) -> Option<Token> {
+        match (self.state, self.chars.peek()) {
+            (TokenizerState::Neutral, Some(p)) if *p == '{' => {
+                None
+            }
+            (TokenizerState::Neutral, _) => {
+                let mut buffer = String::new();
+                while let Some(p) = self.chars.peek() {
+                    if *p == '{' {
+                        break;
+                    } else {
+                        if let Some(c) = self.chars.next() {
+                            buffer.push(c);
+                        }
+                    }
+                }
+                Some(Token::TextContent(buffer))
+            }
+            (TokenizerState::InsideDirective, _) | (TokenizerState::InsideSubstitution, _) => {
+                None
+            }
+        }
+    }
+}
+
+pub fn tokenize<I>(chars: I) -> TokenIter<I>
+    where I: Iterator<Item=char>
+{
+    TokenIter {
+        chars: chars.peekable(),
+        state: TokenizerState::Neutral,
+    }
+}
+
+pub fn test_export() {
+    println!("hi there");
+}
+
